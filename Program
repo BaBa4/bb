@@ -1,0 +1,180 @@
+import os
+from random import randint
+
+
+MAX_TRIES = 6
+HANGMAN_ASCII_ART =("""  _    _                                         
+ | |  | |                                        
+ | |__| | __ _ _ __   __ _ _ __ ___   __ _ _ __  
+ |  __  |/ _` | '_ \ / _` | '_ ` _ \ / _` | '_ \ 
+ | |  | | (_| | | | | (_| | | | | | | (_| | | | |
+ |_|  |_|\__,_|_| |_|\__, |_| |_| |_|\__,_|_| |_|
+                      __/ |                      
+                     |___/ \n
+                     """)
+
+HANGMAN_PHOTOS = {0: "\tx-------x\n",
+                  1: "\tx-------x\n\t|\n\t|\n\t|\n\t|\n\t|",
+                  2: "\tx-------x\n\t|\t|\n\t|\t0\n\t|\n\t|\n\t|",
+                  3: "\tx-------x\n\t|\t|\n\t|\t0\n\t|\t|\n\t|\n\t|",
+                  4: "\tx-------x\n\t|\t|\n\t|\t0\n\t|      /|\\\n\t|\n\t|",
+                  5: "\tx-------x\n\t|\t|\n\t|\t0\n\t|      /|\\\n\t|      /\n\t|",
+                  6: "\tx-------x\n\t|\t|\n\t|\t0\n\t|      /|\\\n\t|      / \\\n\t|",
+                  }
+#1
+
+def open_screen():
+    print(f'{HANGMAN_ASCII_ART}Max Tries: {MAX_TRIES}')
+
+#2
+
+def choose_word(file_path, index):
+    """choose secret word from text file
+    :param file_path: file path loacation
+    :param index: choose word index
+    :type file_path: string
+    :type index: int
+    :return: secret word
+    :rtype: string
+    """
+    try:
+        with open(file_path, 'r') as words:
+            word_list = words.read().split()
+            new_list = []
+            for i in word_list:
+                if i not in new_list:
+                    new_list.append(i)
+            if index.lower() == 'random':
+                index = randint(0, len(new_list) - 1)
+            else :
+                index = int(index)
+            return (new_list[int(index - 1) % len(new_list)])
+    except OSError:
+        print("Incorrect path, enter new path")
+        main()
+    except ValueError:
+        print('Incorrect index, enter correct index ("random" or number)')
+        main()
+    
+#3
+
+def check_valid_input(letter_guessed, old_letters_guessed):
+    """ The function performs a integrity check
+    :param letter_guessed : letter_guessed value
+    :parram old_letter_guessed: old letter gussed value
+    :type letter_guessed : str
+    :type old_letter_guessed: list
+    :return: the result of letter_guessed if is true or false
+    :rtype: bool
+    """
+    if (len(letter_guessed)) > 1 or ((letter_guessed.isalpha()) == False) or (letter_guessed in old_letters_guessed):
+        return False
+    if (len(letter_guessed)) == 1 and (letter_guessed.isalpha()) == True and letter_guessed not in old_letters_guessed:
+        return True
+
+#4
+
+def try_update_letter_guessed(letter_guessed, old_letters_guessed):
+    """ The function update old_Letter_guessed after integrity check
+    :param letter_guessed: letter_guessed value
+    :prarm old_letter_guessed: old_letters_guessed value
+    :type letter_guessed: string
+    :type pld_letter_guessed: list
+    :return: updated list or message with old_letter_guessed
+    :rtype: bool 
+    """
+    letter_guessed = letter_guessed.lower()
+    if check_valid_input(letter_guessed, old_letters_guessed): #use func 3 - check_valid_input
+        old_letters_guessed += letter_guessed
+        return True
+    elif not check_valid_input(letter_guessed, old_letters_guessed):
+        print('X\n' + ' -> '.join(sorted(old_letters_guessed)))
+        return False
+
+#5
+
+def print_hangman(num_of_tries):
+    return HANGMAN_PHOTOS[num_of_tries]
+
+#6
+
+def show_hidden_word(secret_word, old_letters_guessed):
+    """status hidden word
+    :param secret_word: word from file text
+    :param old_letters_guessed: list of guessed letters
+    :type secret_word: string
+    :type old_letters_guessed: list
+    :return: res status of secret words
+    :rtype: syting """
+    chars = [""]
+    for letter in secret_word:
+        if letter in old_letters_guessed:
+            chars.append(letter + ' ')
+        else:
+            chars.append("_ ")
+    res = ''.join(chars)
+    return res
+
+#7
+
+def check_win(secret_word, old_letters_guessed):
+    """check if user win
+    :param secret_word: the seceret word from file
+    :param old_letters_guessed: list of guessed letters
+    :type secret_word: string
+    :type old_letters_guessed: list
+    :return: if user win or not
+    :rtype: bool """
+    q = 0
+    for letter in secret_word:
+        if letter in old_letters_guessed:
+            q = q + 1 
+    if q == len(secret_word):
+        return True
+    return False
+
+#8
+
+def Instructions():
+    print("""
+Instructions
+-------------------------------
+Type wordlist path
+Type 'random' in index for randomal choose index or type number .
+Type clear to clean your screen
+-------------------------------\n""")
+
+#hangman_game
+open_screen()
+Instructions()
+def main():
+    num_of_tries = 0
+    file_path = input(r"enter file path: ")
+    file_index = input(r"enter index: ")
+    secret_word = choose_word(file_path, file_index)
+    old_letters_guessed = []
+    print(f"""\n Let’s start!\n\n{print_hangman(num_of_tries)}""")
+    print(show_hidden_word(secret_word, old_letters_guessed))
+    while num_of_tries < MAX_TRIES:
+        letter_guessed = input('\n''enter each letter: ')
+        if letter_guessed == 'clear':
+            os.system('cls' or 'clear')
+        func_try_update = try_update_letter_guessed(letter_guessed, old_letters_guessed) # short function (try_update_letter)
+        if func_try_update == True and letter_guessed.lower() not in secret_word:
+            num_of_tries += 1
+            print(':(')
+            print(f"""\n\n{print_hangman(num_of_tries)}\n""")
+        print("\n" + show_hidden_word(secret_word, old_letters_guessed))
+        game_status = check_win(secret_word, old_letters_guessed)
+        if game_status:
+            print('you win\n')
+            break
+    if not game_status:
+        print('LOSE\n')
+    if 'y' == input('Do you want play again? -> y/n (press "y" to more game and any key to exit): '):
+        main()
+
+    
+if __name__ == "__main__":
+    main()
+
